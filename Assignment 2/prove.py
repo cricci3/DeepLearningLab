@@ -22,7 +22,7 @@ batch_size = 32
 transformer = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=(0,0,0), std=(1,1,1))])
 
 dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=transformer)#transforms.ToTensor())
-trainloader = DataLoader(dataset_train, batch_size=batch_size)
+trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 
 dataset_test= datasets.CIFAR10(root='./data', train=False, download=True, transform=transformer)
 testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
@@ -63,7 +63,7 @@ for i, (label, img) in enumerate(class_examples.items(), 1):
     plt.axis("off")
     plt.imshow(img)
 
-plt.show()
+#plt.show()
 
 
 # Funzione per estrarre tutte le etichette dal dataloader
@@ -94,7 +94,7 @@ plt.ylabel('Number of Images')
 plt.title('Class Distribution in Train and Test Sets')
 plt.xticks(index + bar_width / 2, class_examples)
 plt.legend()
-plt.show()
+#plt.show()
 
 # Stampiamo i valori
 print("\nNumero di immagini per classe:")
@@ -146,6 +146,44 @@ def out_dimensions(conv_layer, h_in, w_in):
                   conv_layer.stride[1] + 1)
     return h_out, w_out
     
+class CNNB(nn.Module):
+    def __init__(self):
+        super(CNNB, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1)
+        h_out, w_out = out_dimensions(self.conv1, 32, 32)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
+        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
+        self.relu1 = nn.ReLU()
+        self.pool1 = nn.MaxPool2d(2, 2)
+        h_out, w_out = int(h_out/2), int(w_out/2)
+        
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=0, stride=1)
+        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
+        self.conv4 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
+        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
+        h_out, w_out = int(h_out/2), int(w_out/2)
+        
+        self.fc1 = nn.Linear(64 * h_out * w_out, 128)
+        self.dimensions_final = (64, h_out, w_out)
+        self.fc2 = nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.relu1(x)
+        x = self.pool1(x)
+        
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.relu1(x)
+        x = self.pool1(x)
+        
+        n_channels, h, w = self.dimensions_final
+        x = x.view(-1, n_channels * h * w)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return x
+
 class CNN2(nn.Module):
     def __init__(self):
         super(CNN2, self).__init__()
@@ -192,8 +230,8 @@ class CNN2(nn.Module):
 '''
 Q7
 '''
-model = CNN2()
-learning_rate = 0.0305
+model = CNNB()
+learning_rate = 0.031
 # 0.0305 -> 62.79%
 # 0.0301 -> 62.09%
 # 0.0297 -> 61%
@@ -269,69 +307,99 @@ plt.show()
 '''
 Q9
 '''
-class CNN3(nn.Module):
-    def __init__(self, dropout):
-        super(CNN3, self).__init__()
-
-        # First block
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1) # Is in_channels = 1 what you want? No 3 like RGB
-        h_out, w_out = out_dimensions(self.conv1, 32, 32) # Is 28 what you want? no, 32 like W and H
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, stride=1) 
-        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
-        self.pool1 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)
-
-        # Second block
-        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
-        self.pool2 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)
-
-        # Third block
-        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
-        self.conv6 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
-        self.pool3 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)
+class CNNGodzilla(nn.Module):
+    def __init__(self):
+        super(CNNGodzilla, self).__init__()
         
-        # You can double this block! double it
-        self.Dropout = nn.Dropout(dropout)
-        self.fc1 = nn.Linear(128 * h_out * w_out, 64) # What does 32 represent? the input channel coming from the previous block
-                                                    #but if we use a MaxPool layer 2x2 before, then the input channel is 16
-        self.BN = nn.BatchNorm2d(64)
-        self.fc2 = nn.Linear(64, 10) # 10 like the number of classes
-        # You can add one fully connected layer. What do you have to change?
-        self.dimensions_final = (10, h_out, w_out)
+        # First block
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv1, 32, 32)  # 32x32
+        self.BN1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)  # 32x32
+        self.BN2 = nn.BatchNorm2d(32)
+        self.pool1 = nn.MaxPool2d(2, 2)
+        h_out, w_out = int(h_out/2), int(w_out/2)  # 16x16
+        
+        # Second block
+        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)  # 16x16
+        self.BN3 = nn.BatchNorm2d(64)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)  # 16x16
+        self.BN4 = nn.BatchNorm2d(64)
+        self.pool2 = nn.MaxPool2d(2, 2)
+        h_out, w_out = int(h_out/2), int(w_out/2)  # 8x8
+        
+        # Third block
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv5, h_out, w_out)  # 8x8
+        self.BN5 = nn.BatchNorm2d(128)
+        self.conv6 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv6, h_out, w_out)  # 8x8
+        self.BN6 = nn.BatchNorm2d(256)
+        self.pool3 = nn.MaxPool2d(2, 2)
+        h_out, w_out = int(h_out/2), int(w_out/2)  # 4x4
+        
+        # Flatten
+        self.flatten = nn.Flatten()
+        
+        # Store final dimensions for the forward pass
+        self.dimensions_final = (256, h_out, w_out)  # Should be (256, 4, 4)
+        
+        # Fully Connected
+        self.fc1 = nn.Linear(256 * h_out * w_out, 128)  # 256 * 4 * 4 = 4096 input features
+        self.BN7 = nn.BatchNorm1d(128)
+        self.Dropout1 = nn.Dropout(0.5)
+
+        self.fc2 = nn.Linear(128, 64)
+        self.BN8 = nn.BatchNorm1d(64)
+        self.Dropout2 = nn.Dropout(0.5)
+
+        self.fc3 = nn.Linear(64, 10)
 
     def forward(self, x):
         x = self.conv1(x)
+        x = self.BN1(x)
+        x = F.gelu(x)
         x = self.conv2(x)
+        x = self.BN2(x)
         x = F.gelu(x)
         x = self.pool1(x)
 
         x = self.conv3(x)
+        x = self.BN3(x)
+        x = F.gelu(x)
         x = self.conv4(x)
+        x = self.BN4(x)
         x = F.gelu(x)
         x = self.pool2(x)
 
         x = self.conv5(x)
+        x = self.BN5(x)
+        x = F.gelu(x)
         x = self.conv6(x)
+        x = self.BN6(x)
         x = F.gelu(x)
         x = self.pool3(x)
 
-        n_channels, h, w = self.dimensions_final
-        x = x.view(-1, n_channels * h * w)
-        x = self.Dropout(x)
+        x = self.flatten(x)
+
         x = self.fc1(x)
-        x = self.BN(x)
+        x = self.BN7(x)
+        x = F.gelu(x)
+        x = self.Dropout1(x)
+
         x = self.fc2(x)
+        x = self.BN8(x)
+        x = F.gelu(x)
+        x = self.Dropout2(x)
+
+        x = self.fc3(x)
         return x
 
 
-model = CNN3(0.2)
+model = CNNGodzilla()
 learning_rate = 0.0302
 optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 loss_fn = nn.CrossEntropyLoss()
@@ -343,7 +411,7 @@ print("Working on", DEVICE)
 
 train_loss_list = []
 validation_loss_list = []
-n_epochs = 6 # with the introductions of the Dropout who avoid overfitting we can add some epochs
+n_epochs = 7 # with the introductions of the Dropout who avoid overfitting we can add some epochs
 
 for epoch in range(n_epochs):
     loss_train = 0
