@@ -184,48 +184,6 @@ class CNNB(nn.Module):
         x = self.fc2(x)
         return x
 
-class CNN2(nn.Module):
-    def __init__(self):
-        super(CNN2, self).__init__()
-
-        # First block
-        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1) # Is in_channels = 1 what you want? No 3 like RGB
-        h_out, w_out = out_dimensions(self.conv1, 32, 32) # Is 28 what you want? no, 32 like W and H
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=0, stride=1) 
-        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
-        self.pool1 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)
-
-        # Second block
-        self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
-        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
-        self.pool2 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)
-        
-        # You can double this block! double it
-        self.dimensions_final = (64, h_out, w_out)
-        self.fc1 = nn.Linear(64 * h_out * w_out, 128) # What does 32 represent? the input channel coming from the previous block
-                                                    #but if we use a MaxPool layer 2x2 before, then the input channel is 16
-        self.fc2 = nn.Linear(128, 10)
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = self.pool1(x)
-
-        x = self.conv3(x)
-        x = self.conv4(x)
-        x = F.relu(x)
-        x = self.pool2(x)
-
-        n_channels, h, w = self.dimensions_final
-        x = x.view(-1, n_channels * h * w)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        return x
     
 '''
 Q7
