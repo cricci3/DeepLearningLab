@@ -48,7 +48,6 @@ class CNNBasic(nn.Module):
         h_out, w_out = out_dimensions(self.conv1, 32, 32)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
-        self.relu1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2, 2)
         h_out, w_out = int(h_out/2), int(w_out/2)
         
@@ -65,12 +64,12 @@ class CNNBasic(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
-        x = self.relu1(x)
+        x = F.relu(x)
         x = self.pool1(x)
         
         x = self.conv3(x)
         x = self.conv4(x)
-        x = self.relu1(x)
+        x = F.relu(x)
         x = self.pool1(x)
         
         n_channels, h, w = self.dimensions_final
