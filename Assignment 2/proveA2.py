@@ -215,8 +215,6 @@ for epoch in range(n_epochs):
     # Reset training counters for each epoch
     n_samples_train, n_correct_train = 0, 0
     loss_train = 0
-    loss_eval = 0
-
 
     for step, (data, target) in enumerate(trainloader):
         model.train()
@@ -233,26 +231,27 @@ for epoch in range(n_epochs):
         # Compute and accumulate loss
         loss = loss_fn(output, target)
         loss_train += loss.item()
-        loss_train = loss_train / len(trainloader)
         loss.backward()
         optimizer.step()
         
         # Log training metrics every n_steps
         if (step + 1) % n_steps == 0:
             acc_train = 100.0 * n_correct_train / n_samples_train
-            train_loss_list.append(loss_train)
+            avg_loss_train = loss_train / (step + 1)  # Average loss up to current step
+            train_loss_list.append(avg_loss_train)
             train_acc_list.append(acc_train)
             print(f"Epoch [{epoch+1}/{n_epochs}], Step [{step+1}/{len(trainloader)}]")
             print(f"Training Accuracy: {acc_train:.2f}%")
-            print(f"Training Loss: {loss_train}")
-    
-    # At the end of every epochs save the last loss value
-    train_loss_list_epochs.append(loss_train)
+            print(f"Training Loss: {avg_loss_train:.4f}")
+
+    # Save the last computed training loss of the epoch
+    last_loss_train = loss_train / len(trainloader)  # Final averaged loss for the epoch
+    train_loss_list_epochs.append(last_loss_train)
     
     # Validation phase
     model.eval()
     n_samples_eval, n_correct_eval = 0, 0
-    validation_loss_total = 0
+    loss_eval = 0
     
     with torch.no_grad():
         for step, (data, target) in enumerate(validloader):
@@ -267,18 +266,23 @@ for epoch in range(n_epochs):
             # Compute and accumulate validation loss
             loss = loss_fn(output, target)
             loss_eval += loss.item()
-            loss_eval = loss_eval / len(validloader)
 
             # Log validation metrics every n_steps
             if (step + 1) % n_steps == 0:
                 acc_eval = 100.0 * n_correct_eval / n_samples_eval
-                validation_loss_list.append(loss_eval)
+                avg_loss_eval = loss_eval / (step + 1)  # Average loss up to current step
+                validation_loss_list.append(avg_loss_eval)
                 eval_acc_list.append(acc_eval)
                 print(f"Step [{step+1}/{len(validloader)}]")
                 print(f"Validation Accuracy: {acc_eval:.2f}%")
-                print(f"Validation Loss: {loss_eval}")
+                print(f"Validation Loss: {avg_loss_eval:.4f}")
         
-        eval_loss_list_epochs.append(loss_eval)
+        # Save the last computed validation loss of the epoch
+        last_loss_eval = loss_eval / len(validloader)  # Final averaged loss for the epoch
+        eval_loss_list_epochs.append(last_loss_eval)
+        acc_eval = 100.0 * n_correct_eval / n_samples_eval
+        print(f"Epoch [{epoch+1}/{n_epochs}], Validation Loss: {last_loss_eval:.4f}, Validation Accuracy: {acc_eval:.2f}%")
+
 
 # test
 with torch.no_grad():
