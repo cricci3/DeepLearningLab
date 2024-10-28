@@ -232,9 +232,6 @@ Q7
 '''
 model = CNNB()
 learning_rate = 0.031
-# 0.0305 -> 62.79%
-# 0.0301 -> 62.09%
-# 0.0297 -> 61%
 optimizer = optim.SGD(model.parameters(), lr=learning_rate)
 loss_fn = nn.CrossEntropyLoss()
 
