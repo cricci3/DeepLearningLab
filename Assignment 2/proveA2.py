@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from math import floor
 
@@ -65,7 +64,7 @@ for i, (label, img) in enumerate(class_examples.items(), 1):
     plt.axis("off")
     plt.imshow(img)
 
-#plt.show()
+plt.show()
 
 
 # Funzione per estrarre tutte le etichette dal dataloader
@@ -391,7 +390,9 @@ class CNNGodzilla(nn.Module):
         x = F.gelu(x)
         x = self.pool3(x)
 
-        x = self.flatten(x) # istruzione prof
+        # x = self.flatten(x) # istruzione prof
+        n_channels, h, w = self.dimensions_final
+        x = x.view(-1, n_channels * h * w)
 
         x = self.fc1(x)
         x = self.BN7(x)

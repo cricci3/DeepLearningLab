@@ -275,6 +275,7 @@ if __name__ == "__main__":
     '''
     Q3
     '''
+
     trainiter = iter(trainloader)
     train_images, _ = next(trainiter)
 
@@ -323,7 +324,6 @@ if __name__ == "__main__":
 
     n_epochs = 4
     n_steps = 50
-    print(f"Steps: {n_steps}")
 
     train_acc_list, eval_acc_list = [], []
     train_loss_list, validation_loss_list = [], []
