@@ -25,7 +25,9 @@ dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transf
 trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 
 dataset_test= datasets.CIFAR10(root='./data', train=False, download=True, transform=transformer)
-testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
+#testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
+testloader = DataLoader(dataset_test, batch_size=batch_size)
+
 
 classes_map = {
     0 : 'plane',
@@ -130,8 +132,11 @@ Q5
 '''
 dataset_val, dataset_test = torch.utils.data.random_split(dataset_test, [0.5, 0.5])
 
-validloader = DataLoader(dataset_val, batch_size=len(dataset_val))
+#validloader = DataLoader(dataset_val, batch_size=len(dataset_val))
 testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
+validloader = DataLoader(dataset_val, batch_size=batch_size)
+
+print(len(trainloader), len(validloader))
 
 '''
 Q6
@@ -198,43 +203,84 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'mps'
 model = model.to(DEVICE)
 print("Working on", DEVICE)
 
-train_loss_list = []
-validation_loss_list = []
+
 n_epochs = 4
+n_steps = 50
+
+train_acc_list, eval_acc_list = [], []
+train_loss_list, validation_loss_list = [], []
+train_loss_list_epochs, eval_loss_list_epochs = [], []
 
 for epoch in range(n_epochs):
+    # Reset training counters for each epoch
+    n_samples_train, n_correct_train = 0, 0
     loss_train = 0
-    for data, target in trainloader:
-        # Set the model in training mode
+    loss_eval = 0
+
+
+    for step, (data, target) in enumerate(trainloader):
         model.train()
         data, target = data.to(DEVICE), target.to(DEVICE)
-        # Set the gradient to 0
+
         optimizer.zero_grad()
-        # Make a prediction
         output = model(data)
-        # Compute the loss function
+        _, predicted = torch.max(output.data, 1)
+
+        # Update counts
+        n_samples_train += target.size(0)
+        n_correct_train += (predicted == target).sum().item()
+
+        # Compute and accumulate loss
         loss = loss_fn(output, target)
         loss_train += loss.item()
-        # Backpropagation
+        loss_train = loss_train / len(trainloader)
         loss.backward()
-        # Update parameters
         optimizer.step()
         
-    loss_train = loss_train / len(trainloader) # Consider this alternative method of tracking training loss. 
-    train_loss_list.append(loss_train)
+        # Log training metrics every n_steps
+        if (step + 1) % n_steps == 0:
+            acc_train = 100.0 * n_correct_train / n_samples_train
+            train_loss_list.append(loss_train)
+            train_acc_list.append(acc_train)
+            print(f"Epoch [{epoch+1}/{n_epochs}], Step [{step+1}/{len(trainloader)}]")
+            print(f"Training Accuracy: {acc_train:.2f}%")
+            print(f"Training Loss: {loss_train}")
     
-    # At the end of every epoch, check the validation loss value
+    # At the end of every epochs save the last loss value
+    train_loss_list_epochs.append(loss_train)
+    
+    # Validation phase
+    model.eval()
+    n_samples_eval, n_correct_eval = 0, 0
+    validation_loss_total = 0
+    
     with torch.no_grad():
-        model.eval()
-        for data, target in validloader: # Just one batch
+        for step, (data, target) in enumerate(validloader):
             data, target = data.to(DEVICE), target.to(DEVICE)
-            # Make a prediction
             output = model(data)
-            # Compute the loss function
-            validation_loss = loss_fn(output, target).item()
-            print(f"Epoch {epoch + 1}: Train loss: {loss_train}, Validation loss {validation_loss}")
-            validation_loss_list.append(validation_loss)
+            _, predicted = torch.max(output.data, 1)
 
+            # Update evaluation counts
+            n_samples_eval += target.size(0)
+            n_correct_eval += (predicted == target).sum().item()
+            
+            # Compute and accumulate validation loss
+            loss = loss_fn(output, target)
+            loss_eval += loss.item()
+            loss_eval = loss_eval / len(validloader)
+
+            # Log validation metrics every n_steps
+            if (step + 1) % n_steps == 0:
+                acc_eval = 100.0 * n_correct_eval / n_samples_eval
+                validation_loss_list.append(loss_eval)
+                eval_acc_list.append(acc_eval)
+                print(f"Step [{step+1}/{len(validloader)}]")
+                print(f"Validation Accuracy: {acc_eval:.2f}%")
+                print(f"Validation Loss: {loss_eval}")
+        
+        eval_loss_list_epochs.append(loss_eval)
+
+# test
 with torch.no_grad():
     n_correct = 0
     n_samples = 0
@@ -248,12 +294,15 @@ with torch.no_grad():
     acc = 100.0 * n_correct / n_samples
 print("Accuracy on the test set:", acc, "%")
 
+print(len(train_loss_list), len(validation_loss_list))
+print(len(train_loss_list_epochs), len(eval_loss_list_epochs))
+
 '''
 Q8
 '''
 plt.figure()
-plt.plot(range(n_epochs), train_loss_list)
-plt.plot(range(n_epochs), validation_loss_list)
+plt.plot(range(n_epochs), train_loss_list_epochs)
+plt.plot(range(n_epochs), eval_loss_list_epochs)
 plt.legend(["Train loss", "Validation Loss"])
 plt.xlabel("Epochs")
 plt.ylabel("Loss value")
@@ -338,7 +387,7 @@ class CNNGodzilla(nn.Module):
         x = F.gelu(x)
         x = self.pool3(x)
 
-        x = self.flatten(x)
+        x = self.flatten(x) # istruzione prof
 
         x = self.fc1(x)
         x = self.BN7(x)
@@ -398,8 +447,8 @@ for epoch in range(n_epochs):
             output = model(data)
             # Compute the loss function
             validation_loss = loss_fn(output, target).item()
-            print(f"Epoch {epoch + 1}: Train loss: {loss_train}, Validation loss {validation_loss}")
-            validation_loss_list.append(validation_loss)
+    print(f"Epoch {epoch + 1}: Train loss: {loss_train}, Validation loss {validation_loss}")
+    validation_loss_list.append(validation_loss)
 
 with torch.no_grad():
     n_correct = 0
