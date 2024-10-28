@@ -188,11 +188,6 @@ if __name__ == "__main__":
     manual_seed = 42
     torch.manual_seed(manual_seed)
 
-    '''
-    Q1 - Code
-    '''
-    pass
-
     
     '''
     Q2 - Code
@@ -266,6 +261,7 @@ if __name__ == "__main__":
     plt.title('Class Distribution in Train and Test Sets')
     plt.xticks(index + bar_width / 2, class_examples)
     plt.legend()
+    plt.grid()
     plt.show()
 
     # Stampiamo i valori
@@ -327,6 +323,7 @@ if __name__ == "__main__":
 
     n_epochs = 4
     n_steps = 50
+    print(f"Steps: {n_steps}")
 
     train_acc_list, eval_acc_list = [], []
     train_loss_list, validation_loss_list = [], []
