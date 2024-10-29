@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 import matplotlib.pyplot as plt
 from math import floor
+import time
 
 
 '''
@@ -278,9 +279,6 @@ if __name__ == "__main__":
     trainiter = iter(trainloader)
     train_images, _ = next(trainiter)
 
-    testiter = iter(testloader)
-    test_images, _ = next(testiter)
-
     # Prendi la prima immagine del batch
     first_image = train_images[0]
 
@@ -310,7 +308,7 @@ if __name__ == "__main__":
     Q7
     '''
     model = CNNBasic()
-    learning_rate = 0.031
+    learning_rate = 0.032
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -327,6 +325,7 @@ if __name__ == "__main__":
     train_loss_list, validation_loss_list = [], []
     train_loss_list_epochs, eval_loss_list_epochs = [], []
 
+    start_time = time.time()
     for epoch in range(n_epochs):
         # Reset training counters for each epoch
         n_samples_train, n_correct_train = 0, 0
@@ -412,7 +411,9 @@ if __name__ == "__main__":
             n_correct += (predicted == target).sum().item()
 
         acc = 100.0 * n_correct / n_samples
+    end_time = time.time()
     print("Accuracy on the test set:", acc, "%")
+    print(f"Training time: {end_time - start_time}")
 
     print(len(train_loss_list), len(validation_loss_list))
     print(len(train_loss_list_epochs), len(eval_loss_list_epochs))
