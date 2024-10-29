@@ -8,14 +8,15 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torchvision
 from torchvision import transforms
 from torchvision import datasets
 from torch.utils.data import DataLoader
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from math import floor
+
 
 '''
 Q2
@@ -40,7 +41,8 @@ def out_dimensions(conv_layer, h_in, w_in):
     w_out = floor((w_in + 2 * conv_layer.padding[1] - conv_layer.dilation[1] * (conv_layer.kernel_size[1] - 1) - 1) /
                   conv_layer.stride[1] + 1)
     return h_out, w_out
-    
+
+
 class CNNBasic(nn.Module):
     def __init__(self):
         super(CNNBasic, self).__init__()
@@ -117,7 +119,8 @@ class CNNGodzilla(nn.Module):
         h_out, w_out = int(h_out/2), int(w_out/2)  # 4x4
         
         # Flatten
-        self.flatten = nn.Flatten()
+        # self.flatten = nn.Flatten()
+        
         
         # Store final dimensions for the forward pass
         self.dimensions_final = (256, h_out, w_out)  # Should be (256, 4, 4)
@@ -237,7 +240,6 @@ if __name__ == "__main__":
         plt.title(classes_map[label])
         plt.axis("off")
         plt.imshow(img)
-
     plt.show()
 
     # Otteniamo le etichette da train e test e put them into an array
@@ -254,7 +256,6 @@ if __name__ == "__main__":
 
     plt.bar(index, train_counts, bar_width, label='Train', color='deepskyblue')
     plt.bar(index + bar_width, test_counts, bar_width, label='Test', color='lightgreen')
-
     plt.xlabel('Classes')
     plt.ylabel('Number of Images')
     plt.title('Class Distribution in Train and Test Sets')
@@ -264,7 +265,7 @@ if __name__ == "__main__":
     plt.show()
 
     # Stampiamo i valori
-    print("\nNumero di immagini per classe:")
+    print("Numero di immagini per classe:")
     print(f"{'Classe':<10} {'Training':<10} {'Test':<10}")
     print("-" * 30)
     for i in range(10):
@@ -274,13 +275,39 @@ if __name__ == "__main__":
     '''
     Q3
     '''
+    # --------------------------------------------------
+    #trainiter = iter(trainloader)
+    #train_images, _ = next(trainiter)
+
+    #testiter = iter(testloader)
+    #test_images, _ = next(testiter)
 
     trainiter = iter(trainloader)
-    train_images, _ = next(trainiter)
+    train_images, train_label = next(trainiter)
 
     testiter = iter(testloader)
-    test_images, _ = next(testiter)
+    test_images, test_label = next(testiter)
 
+    # Calcoliamo la distribuzione delle classi
+    _, t_counts = np.unique(train_label, return_counts=True)
+    _, t_counts = np.unique(test_label, return_counts=True)
+
+    # Creiamo il grafico comparativo
+    bar_width = 0.35
+    index = np.arange(len(class_examples))
+
+    plt.bar(index, t_counts, bar_width, label='Train', color='deepskyblue')
+    plt.bar(index + bar_width, t_counts, bar_width, label='Test', color='lightgreen')
+    plt.xlabel('Classes')
+    plt.ylabel('Number of Images')
+    plt.title('Class Distribution in Train and Test Sets')
+    plt.xticks(index + bar_width / 2, class_examples)
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+    # --------------------------------------------------
 
     # Prendi la prima immagine del batch
     first_image = train_images[0]
