@@ -275,39 +275,11 @@ if __name__ == "__main__":
     '''
     Q3
     '''
-    # --------------------------------------------------
-    #trainiter = iter(trainloader)
-    #train_images, _ = next(trainiter)
-
-    #testiter = iter(testloader)
-    #test_images, _ = next(testiter)
-
     trainiter = iter(trainloader)
-    train_images, train_label = next(trainiter)
+    train_images, _ = next(trainiter)
 
     testiter = iter(testloader)
-    test_images, test_label = next(testiter)
-
-    # Calcoliamo la distribuzione delle classi
-    _, t_counts = np.unique(train_label, return_counts=True)
-    _, t_counts = np.unique(test_label, return_counts=True)
-
-    # Creiamo il grafico comparativo
-    bar_width = 0.35
-    index = np.arange(len(class_examples))
-
-    plt.bar(index, t_counts, bar_width, label='Train', color='deepskyblue')
-    plt.bar(index + bar_width, t_counts, bar_width, label='Test', color='lightgreen')
-    plt.xlabel('Classes')
-    plt.ylabel('Number of Images')
-    plt.title('Class Distribution in Train and Test Sets')
-    plt.xticks(index + bar_width / 2, class_examples)
-    plt.legend()
-    plt.grid()
-    plt.show()
-
-
-    # --------------------------------------------------
+    test_images, _ = next(testiter)
 
     # Prendi la prima immagine del batch
     first_image = train_images[0]
