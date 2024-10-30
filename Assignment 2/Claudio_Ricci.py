@@ -181,6 +181,9 @@ class CNNGodzilla(nn.Module):
 
 
 if __name__ == "__main__":
+    LR_BASIC = 0.032
+    LR_GODZILLA = 0.0302
+    
     # Write your code here
     print("Hello World!")
 
@@ -308,7 +311,7 @@ if __name__ == "__main__":
     Q7
     '''
     model = CNNBasic()
-    learning_rate = 0.032
+    learning_rate = LR_BASIC
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -434,7 +437,12 @@ if __name__ == "__main__":
     Q9
     '''
     model = CNNGodzilla()
-    learning_rate = 0.0302
+    learning_rate = LR_GODZILLA
+    # 0.029 overfitting
+    # 0.03 overfitting
+    # LR_GODZILLA 0.0302 grafico solito (overfitting solo all'inizio)
+    # 0.031 overfitting
+
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -511,7 +519,8 @@ if __name__ == "__main__":
         # Train the models here
         
         model = CNNBasic()
-        learning_rate = 0.0302
+        learning_rate = LR_BASIC
+
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         loss_fn = nn.CrossEntropyLoss()
 
