@@ -102,45 +102,39 @@ class CNNGodzilla(nn.Module):
         self.BN2 = nn.BatchNorm2d(32)
         self.pool1 = nn.MaxPool2d(2, 2)
         h_out, w_out = int(h_out/2), int(w_out/2)  # 16x16
-        #self.drop1 = nn.Dropout(0.2)
-
         
         # Second block
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
         h_out, w_out = out_dimensions(self.conv3, h_out, w_out)  # 16x16
         self.BN3 = nn.BatchNorm2d(64)
-        self.conv4 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, stride=1)
+        self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
         h_out, w_out = out_dimensions(self.conv4, h_out, w_out)  # 16x16
-        self.BN4 = nn.BatchNorm2d(128)
+        self.BN4 = nn.BatchNorm2d(64)
         self.pool2 = nn.MaxPool2d(2, 2)
         h_out, w_out = int(h_out/2), int(w_out/2)  # 8x8
-        #self.drop2 = nn.Dropout(0.2)
         
         # Third block
-        #self.conv5 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), padding=1, stride=1)
-        #h_out, w_out = out_dimensions(self.conv5, h_out, w_out)  # 8x8
-        #self.BN5 = nn.BatchNorm2d(256)
-        #self.conv6 = nn.Conv2d(in_channels=256, out_channels=512, kernel_size=(3, 3), padding=1, stride=1)
-        #h_out, w_out = out_dimensions(self.conv6, h_out, w_out)  # 8x8
-        #self.BN6 = nn.BatchNorm2d(512)
-        #self.pool3 = nn.MaxPool2d(2, 2)
-        #h_out, w_out = int(h_out/2), int(w_out/2)  # 4x4
-        #self.drop3 = nn.Dropout(0.2)
-
+        self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv5, h_out, w_out)  # 8x8
+        self.BN5 = nn.BatchNorm2d(128)
+        self.conv6 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), padding=1, stride=1)
+        h_out, w_out = out_dimensions(self.conv6, h_out, w_out)  # 8x8
+        self.BN6 = nn.BatchNorm2d(256)
+        self.pool3 = nn.MaxPool2d(2, 2)
+        h_out, w_out = int(h_out/2), int(w_out/2)  # 4x4
         
         # Flatten
-        # self.flatten = nn.Flatten()
-        
+        self.flatten = nn.Flatten()
         
         # Store final dimensions for the forward pass
-        self.dimensions_final = (128, h_out, w_out)  # Should be (256, 4, 4)
+        self.dimensions_final = (256, h_out, w_out)  # Should be (256, 4, 4)
         
         # Fully Connected
-        self.fc1 = nn.Linear(128 * h_out * w_out, 256)  # 256 * 4 * 4 = 4096 input features
-        self.BN7 = nn.BatchNorm1d(256)
+        self.fc1 = nn.Linear(256 * h_out * w_out, 128)  # 256 * 4 * 4 = 4096 input features
+        self.BN7 = nn.BatchNorm1d(128)
         self.Dropout1 = nn.Dropout(0.5)
 
-        self.fc2 = nn.Linear(256, 64)
+        self.fc2 = nn.Linear(128, 64)
         self.BN8 = nn.BatchNorm1d(64)
         self.Dropout2 = nn.Dropout(0.5)
 
@@ -154,7 +148,6 @@ class CNNGodzilla(nn.Module):
         x = self.BN2(x)
         x = F.gelu(x)
         x = self.pool1(x)
-        x = self.drop1(x)
 
         x = self.conv3(x)
         x = self.BN3(x)
@@ -163,20 +156,16 @@ class CNNGodzilla(nn.Module):
         x = self.BN4(x)
         x = F.gelu(x)
         x = self.pool2(x)
-        x = self.drop2(x)
 
+        x = self.conv5(x)
+        x = self.BN5(x)
+        x = F.gelu(x)
+        x = self.conv6(x)
+        x = self.BN6(x)
+        x = F.gelu(x)
+        x = self.pool3(x)
 
-        #x = self.conv5(x)
-        #x = self.BN5(x)
-        #x = F.gelu(x)
-        #x = self.conv6(x)
-        #x = self.BN6(x)
-        #x = F.gelu(x)
-        #x = self.pool3(x)
-        #x = self.drop3(x)
-
-        n_channels, h, w = self.dimensions_final
-        x = x.view(-1, n_channels * h * w)
+        x = self.flatten(x) # istruzione prof
 
         x = self.fc1(x)
         x = self.BN7(x)
@@ -190,7 +179,7 @@ class CNNGodzilla(nn.Module):
 
         x = self.fc3(x)
         return x
-
+    
 
 if __name__ == "__main__":
     LR_BASIC = 0.032
