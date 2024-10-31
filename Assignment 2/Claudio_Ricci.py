@@ -44,9 +44,9 @@ def out_dimensions(conv_layer, h_in, w_in):
     return h_out, w_out
 
 
-class CNNB(nn.Module):
+class CNNBasic(nn.Module):
     def __init__(self):
-        super(CNNB, self).__init__()
+        super(CNNBasic, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv1, 32, 32)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
@@ -182,9 +182,6 @@ class CNNGodzilla(nn.Module):
 
 
 if __name__ == "__main__":
-    LR_BASIC = 0.032
-    LR_GODZILLA = 0.0302
-    
     # Write your code here
     print("Hello World!")
 
@@ -207,7 +204,6 @@ if __name__ == "__main__":
     trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 
     dataset_test= datasets.CIFAR10(root='./data', train=False, download=True, transform=transformer)
-    #testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
     testloader = DataLoader(dataset_test, batch_size=batch_size)
 
     classes_map = {
@@ -301,7 +297,6 @@ if __name__ == "__main__":
     '''
     dataset_val, dataset_test = torch.utils.data.random_split(dataset_test, [0.5, 0.5])
 
-    #validloader = DataLoader(dataset_val, batch_size=len(dataset_val))
     testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
     validloader = DataLoader(dataset_val, batch_size=batch_size)
 
@@ -312,7 +307,7 @@ if __name__ == "__main__":
     Q7
     '''
     model = CNNBasic()
-    learning_rate = LR_BASIC
+    learning_rate = 0.029
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -437,12 +432,21 @@ if __name__ == "__main__":
     '''
     Q9
     '''
+    train_transform = transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(20),  
+        transforms.ToTensor(),
+        transforms.Normalize(mean=0, std=1),
+    ])
+
+    dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
+    trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
+    
     model = CNNGodzilla()
-    learning_rate = 0.029
-    # 0.029 overfitting
-    # 0.03 overfitting
-    # LR_GODZILLA 0.0302 grafico solito (overfitting solo all'inizio)
-    # 0.031 overfitting
+    learning_rate = 0.03
+    # con 0.3 81% ottima loss con 20 random
+    # 0.32 80% spike più alti
+    # 0.28 80% carino
 
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
@@ -454,7 +458,7 @@ if __name__ == "__main__":
 
     train_loss_list = []
     validation_loss_list = []
-    n_epochs = 8 # with the introductions of the Dropout who avoid overfitting we can add some epochs
+    n_epochs = 9 # with the introductions of the Dropout who avoid overfitting we can add some epochs
 
     for epoch in range(n_epochs):
         loss_train = 0
@@ -520,7 +524,7 @@ if __name__ == "__main__":
         # Train the models here
         
         model = CNNBasic()
-        learning_rate = LR_BASIC
+        learning_rate = 0.029
 
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         loss_fn = nn.CrossEntropyLoss()
