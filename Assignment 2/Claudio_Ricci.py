@@ -443,11 +443,7 @@ if __name__ == "__main__":
     trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
     
     model = CNNGodzilla()
-    learning_rate = 0.03
-    # con 0.3 81% ottima loss con 20 random
-    # 0.32 80% spike più alti
-    # 0.28 80% carino
-
+    learning_rate = 0.032
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -458,7 +454,7 @@ if __name__ == "__main__":
 
     train_loss_list = []
     validation_loss_list = []
-    n_epochs = 9 # with the introductions of the Dropout who avoid overfitting we can add some epochs
+    n_epochs = 6 # with the introductions of the Dropout who avoid overfitting we can add some epochs
 
     for epoch in range(n_epochs):
         loss_train = 0
