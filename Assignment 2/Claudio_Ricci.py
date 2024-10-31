@@ -44,13 +44,14 @@ def out_dimensions(conv_layer, h_in, w_in):
     return h_out, w_out
 
 
-class CNNBasic(nn.Module):
+class CNNB(nn.Module):
     def __init__(self):
-        super(CNNBasic, self).__init__()
+        super(CNNB, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv1, 32, 32)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
+        self.relu1 = nn.ReLU()
         self.pool1 = nn.MaxPool2d(2, 2)
         h_out, w_out = int(h_out/2), int(w_out/2)
         
@@ -60,25 +61,28 @@ class CNNBasic(nn.Module):
         h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
         h_out, w_out = int(h_out/2), int(w_out/2)
         
-        self.fc1 = nn.Linear(64 * h_out * w_out, 128)
         self.dimensions_final = (64, h_out, w_out)
-        self.fc2 = nn.Linear(128, 10)
+        self.fc1 = nn.Linear(64 * h_out * w_out, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)
+
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.conv2(x)
-        x = F.relu(x)
+        x = self.relu1(x)
         x = self.pool1(x)
         
         x = self.conv3(x)
         x = self.conv4(x)
-        x = F.relu(x)
+        x = self.relu1(x)
         x = self.pool1(x)
         
         n_channels, h, w = self.dimensions_final
         x = x.view(-1, n_channels * h * w)
         x = self.fc1(x)
         x = self.fc2(x)
+        x = self.fc3(x)
         return x
 
 
@@ -320,7 +324,7 @@ if __name__ == "__main__":
     '''
     model = CNNBasic()
     learning_rate = LR_BASIC
-    optimizer = optim.SGD(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
     DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'mps' 
