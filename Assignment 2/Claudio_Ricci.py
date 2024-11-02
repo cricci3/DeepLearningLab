@@ -210,7 +210,6 @@ class CNNGodzilla(nn.Module):
 
 
 if __name__ == "__main__":
-    # Write your code here
     print("Hello World!")
 
     '''
@@ -226,14 +225,17 @@ if __name__ == "__main__":
     '''
     batch_size = 32
 
+    # Defined transformations for the dataset: convert images to tensors and normalize them
     transformer = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=(0,0,0), std=(1,1,1))])
 
+    # Load CIFAR-10 training and test dataset with defined transformations
     dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=transformer)#transforms.ToTensor())
     trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 
     dataset_test= datasets.CIFAR10(root='./data', train=False, download=True, transform=transformer)
     testloader = DataLoader(dataset_test, batch_size=batch_size)
 
+    # Dictionary to map class indices to class names
     classes_map = {
         0 : 'plane',
         1 : 'car',
@@ -247,13 +249,14 @@ if __name__ == "__main__":
         9 : 'truck'
     }
 
+    # Figure to display one example image per class
     figure = plt.figure(figsize=(8, 4))
     cols, rows = 5, 2
 
-    # Creiamo un dizionario per tenere traccia delle immagini trovate per ogni classe
+    # Dictionary to keep track of one image for each class
     class_examples = {}
 
-    # Cerchiamo un esempio per ogni classe
+    # Loop through training dataset to find one image per class
     for i, (img, label) in enumerate(dataset_train):
             # dataset return img, label 
             # enumerate return i
@@ -262,7 +265,7 @@ if __name__ == "__main__":
         if len(class_examples) == 10:
             break
 
-    # Plottiamo un'immagine per ogni classe
+    # Plot one image per classe in the already defined figure
     for i, (label, img) in enumerate(class_examples.items(), 1):
         figure.add_subplot(rows, cols, i)
         img = img.permute(1, 2, 0)
@@ -271,15 +274,15 @@ if __name__ == "__main__":
         plt.imshow(img)
     plt.show()
 
-    # Otteniamo le etichette da train e test e put them into an array
+    # Get labels from training and test datasets, storing them as arrays
     train_label = get_labels_from_loader(trainloader)
     test_label = get_labels_from_loader(testloader)
 
-    # Calcoliamo la distribuzione delle classi
+    # Calculate the distribution of classes in both training and test datasets
     _, train_counts = np.unique(train_label, return_counts=True)
     _, test_counts = np.unique(test_label, return_counts=True)
 
-    # Creiamo il grafico comparativo
+    # Comparative bar chart showing class distributions
     bar_width = 0.35
     index = np.arange(len(class_examples))
 
@@ -293,7 +296,7 @@ if __name__ == "__main__":
     plt.grid()
     plt.show()
 
-    # Stampiamo i valori
+    # Also print the values
     print("Numero di immagini per classe:")
     print(f"{'Classe':<10} {'Training':<10} {'Test':<10}")
     print("-" * 30)
@@ -304,18 +307,18 @@ if __name__ == "__main__":
     '''
     Q3
     '''
+    # Get a batch of images from the training loader and extract the first image
     trainiter = iter(trainloader)
     train_images, _ = next(trainiter)
-
-    # Prendi la prima immagine del batch
     first_image = train_images[0]
 
+    # Display the type of the dataset element
     print(f"Type of each element of the dataset: {first_image.type}")
 
-    # Stampa la dimensione dell'immagine
+    # Display the shape of the image tensor (channels, height, width)
     print(f"Shape of the image tensor: {first_image.shape}")  # (C, H, W)
 
-    # Puoi separare in Channels, Height, Width
+    # Separate the shape into channels, height, and width
     channels, height, width = first_image.shape
     print(f"Width: {width}, Height: {height}, Channels: {channels}")
     
@@ -323,6 +326,7 @@ if __name__ == "__main__":
     '''
     Q5
     '''
+    # Split the test dataset into validation and test set (50-50%) and define DataLoaders
     dataset_val, dataset_test = torch.utils.data.random_split(dataset_test, [0.5, 0.5])
 
     testloader = DataLoader(dataset_test, batch_size=len(dataset_test))
@@ -334,6 +338,7 @@ if __name__ == "__main__":
     '''
     Q7
     '''
+    # Initialize the first CNN model and set hyperparameters
     model = CNNBasic()
     learning_rate = 0.03
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
@@ -345,13 +350,18 @@ if __name__ == "__main__":
     print("Working on", DEVICE)
 
 
+    # Number of epochs and size of steps
     n_epochs = 4
     n_steps = 50
 
+    # Lists to store accuracy and loss metrics every n_steps
     train_acc_list, eval_acc_list = [], []
     train_loss_list, validation_loss_list = [], []
+    
+    # Lists to store loss metrics at the end of every epoch
     train_loss_list_epochs, eval_loss_list_epochs = [], []
 
+    # Also recording the training time
     start_time = time.time()
     for epoch in range(n_epochs):
         # Reset training counters for each epoch
@@ -359,51 +369,57 @@ if __name__ == "__main__":
         loss_train = 0
 
         for step, (data, target) in enumerate(trainloader):
+            # Set the model in training mode
             model.train()
             data, target = data.to(DEVICE), target.to(DEVICE)
 
+            # Clear gradients from previous step
             optimizer.zero_grad()
             output = model(data)
+            # Get the predicted class
             _, predicted = torch.max(output.data, 1)
 
-            # Update counts
+            # Update training counters (number of samples processed and number of correct predictions)
             n_samples_train += target.size(0)
             n_correct_train += (predicted == target).sum().item()
 
             # Compute and accumulate loss
             loss = loss_fn(output, target)
-            loss_train += loss.item()
+            loss_train += loss.item() # Accumulate epoch loss for logging
             loss.backward()
-            optimizer.step()
+            optimizer.step() # Update model parameters
             
             # Log training metrics every n_steps
             if (step + 1) % n_steps == 0:
-                acc_train = 100.0 * n_correct_train / n_samples_train
+                acc_train = 100.0 * n_correct_train / n_samples_train # Calculate training accuracy
                 avg_loss_train = loss_train / (step + 1)  # Average loss up to current step
+                
+                # Store training loss and accuracy
                 train_loss_list.append(avg_loss_train)
                 train_acc_list.append(acc_train)
                 print(f"Epoch [{epoch+1}/{n_epochs}], Step [{step+1}/{len(trainloader)}]")
                 print(f"Training Accuracy: {acc_train:.2f}%")
                 print(f"Training Loss: {avg_loss_train:.4f}")
 
-        # Save the last computed training loss of the epoch
-        last_loss_train = loss_train / len(trainloader)  # Final averaged loss for the epoch
+        # Save the average validation loss for the epoch
+        last_loss_train = loss_train / len(trainloader)  # Average loss for the epoch
         train_loss_list_epochs.append(last_loss_train)
         
         # Validation phase
-        model.eval()
+        model.eval() # Set the model to evaluation mode
         n_samples_eval, n_correct_eval = 0, 0
         loss_eval = 0
         
-        with torch.no_grad():
+        with torch.no_grad(): # Disable gradient computation for validation
             for step, (data, target) in enumerate(validloader):
                 data, target = data.to(DEVICE), target.to(DEVICE)
                 output = model(data)
+                # Get predicted class
                 _, predicted = torch.max(output.data, 1)
 
                 # Update evaluation counts
                 n_samples_eval += target.size(0)
-                n_correct_eval += (predicted == target).sum().item()
+                n_correct_eval += (predicted == target).sum().item() # Count correct predictions
                 
                 # Compute and accumulate validation loss
                 loss = loss_fn(output, target)
@@ -411,34 +427,38 @@ if __name__ == "__main__":
 
                 # Log validation metrics every n_steps
                 if (step + 1) % n_steps == 0:
-                    acc_eval = 100.0 * n_correct_eval / n_samples_eval
+                    acc_eval = 100.0 * n_correct_eval / n_samples_eval # Calculate validation accuracy
                     avg_loss_eval = loss_eval / (step + 1)  # Average loss up to current step
+                    # Store validation loss and accuracy
                     validation_loss_list.append(avg_loss_eval)
                     eval_acc_list.append(acc_eval)
                     print(f"Step [{step+1}/{len(validloader)}]")
                     print(f"Validation Accuracy: {acc_eval:.2f}%")
                     print(f"Validation Loss: {avg_loss_eval:.4f}")
             
-            # Save the last computed validation loss of the epoch
-            last_loss_eval = loss_eval / len(validloader)  # Final averaged loss for the epoch
+            # Save the average validation loss for the epoch
+            last_loss_eval = loss_eval / len(validloader)  # Average loss for the epoch
             eval_loss_list_epochs.append(last_loss_eval)
+            # Calculate final validation accuracy for the epoch
             acc_eval = 100.0 * n_correct_eval / n_samples_eval
             print(f"Epoch [{epoch+1}/{n_epochs}], Validation Loss: {last_loss_eval:.4f}, Validation Accuracy: {acc_eval:.2f}%")
 
 
-    # test
+    # Test the model on the test dataset
     with torch.no_grad():
         n_correct = 0
         n_samples = 0
         for data, target in testloader:
             data, target = data.to(DEVICE), target.to(DEVICE)
             outputs = model(data)
+            # Get predicted class
             _, predicted = torch.max(outputs.data, 1)
             n_samples += target.size(0)
             n_correct += (predicted == target).sum().item()
 
+        # Calculate test accuracy
         acc = 100.0 * n_correct / n_samples
-    end_time = time.time()
+    end_time = time.time() # Record the end time of training
     print("Accuracy on the test set:", acc, "%")
     print(f"Training time: {end_time - start_time}")
 
@@ -449,6 +469,7 @@ if __name__ == "__main__":
     '''
     Q8
     '''
+    # Plot training and validation loss over epochs
     plt.figure()
     plt.plot(range(n_epochs), train_loss_list_epochs)
     plt.plot(range(n_epochs), eval_loss_list_epochs)
@@ -460,16 +481,20 @@ if __name__ == "__main__":
     '''
     Q9
     '''
+    # Data augmentation transformations for training
     train_transform = transforms.Compose([
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(20),  
+        transforms.RandomHorizontalFlip(), # Horizontally flip the given image randomly with a default probability of 0.5
+        transforms.RandomRotation(20), # Rotate the image by defined angle
         transforms.ToTensor(),
         transforms.Normalize(mean=0, std=1),
     ])
 
+    # ReLoad the CIFAR-10 training dataset now with data augmentation
     dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
     trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
+    # Reloading not also for test/validation -> data augmentation just on training set
     
+    # Initialize a model with new architecture and define hyperparameters
     model = CNNGodzilla()
     learning_rate = 0.032
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
@@ -480,10 +505,14 @@ if __name__ == "__main__":
     model = model.to(DEVICE)
     print("Working on", DEVICE)
 
+    # Lists to store training and validation loss
     train_loss_list = []
     validation_loss_list = []
-    n_epochs = 6 # with the introductions of the Dropout who avoid overfitting we can add some epochs
+    
+    # Thanks to the introductions of the Data Aug/Dropout who avoid overfitting I can add some epochs
+    n_epochs = 6
 
+    # Training
     for epoch in range(n_epochs):
         loss_train = 0
         for data, target in trainloader:
@@ -502,7 +531,8 @@ if __name__ == "__main__":
             # Update parameters
             optimizer.step()
             
-        loss_train = loss_train / len(trainloader) # Consider this alternative method of tracking training loss. 
+        # Compute and store training loss
+        loss_train = loss_train / len(trainloader)
         train_loss_list.append(loss_train)
         
         # At the end of every epoch, check the validation loss value
@@ -517,6 +547,7 @@ if __name__ == "__main__":
         print(f"Epoch {epoch + 1}: Train loss: {loss_train}, Validation loss {validation_loss}")
         validation_loss_list.append(validation_loss)
 
+    # Test the model on the test dataset
     with torch.no_grad():
         n_correct = 0
         n_samples = 0
@@ -531,6 +562,7 @@ if __name__ == "__main__":
     print("Accuracy on the test set:", acc, "%")
 
 
+    # Plot training and validation loss over epochs
     plt.figure()
     plt.plot(range(n_epochs), train_loss_list)
     plt.plot(range(n_epochs), validation_loss_list)
@@ -542,14 +574,14 @@ if __name__ == "__main__":
     '''
     Q10 -  Code
     '''
+    # Loop over a range of seeds to initialize random number generation for reproducibility
     for seed in range(5,10):
         torch.manual_seed(seed)
         print("Seed equal to ", torch.random.initial_seed())
-        # Train the models here
-        
+
+        # Initialize the model, optimizer, loss function and LR
         model = CNNBasic()
         learning_rate = 0.029
-
         optimizer = optim.SGD(model.parameters(), lr=learning_rate)
         loss_fn = nn.CrossEntropyLoss()
 
@@ -558,10 +590,12 @@ if __name__ == "__main__":
         model = model.to(DEVICE)
         print("Working on", DEVICE)
 
+        # Initialize lists to track training and validation loss
         train_loss_list = []
         validation_loss_list = []
-        n_epochs = 4 # with the introductions of the Dropout who avoid overfitting we can add some epochs
+        n_epochs = 4
 
+        # Training loop over epochs
         for epoch in range(n_epochs):
             loss_train = 0
             for data, target in trainloader:
@@ -580,7 +614,7 @@ if __name__ == "__main__":
                 # Update parameters
                 optimizer.step()
 
-            loss_train = loss_train / len(trainloader) # Consider this alternative method of tracking training loss. 
+            loss_train = loss_train / len(trainloader) #Compute training loss. 
             train_loss_list.append(loss_train)
         
             # At the end of every epoch, check the validation loss value
@@ -595,15 +629,18 @@ if __name__ == "__main__":
             print(f"Epoch {epoch + 1}: Train loss: {loss_train}, Validation loss {validation_loss}")
             validation_loss_list.append(validation_loss)
 
+        # Evaluate the model on the test set
         with torch.no_grad():
+            # Initialize correct predictions counter and samples counter
             n_correct = 0
             n_samples = 0
             for data, target in testloader:
                 data, target = data.to(DEVICE), target.to(DEVICE)
                 outputs = model(data)
-                _, predicted = torch.max(outputs.data, 1)
+                _, predicted = torch.max(outputs.data, 1) # Get predicted classes
                 n_samples += target.size(0)
                 n_correct += (predicted == target).sum().item()
 
+            # Calculate accuracy
             acc = 100.0 * n_correct / n_samples
         print("Accuracy on the test set:", acc, "%")
