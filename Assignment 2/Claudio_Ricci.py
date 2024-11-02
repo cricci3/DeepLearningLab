@@ -22,11 +22,14 @@ import time
 '''
 Q2
 '''
-# Funzione per estrarre tutte le etichette dal dataloader
 def get_labels_from_loader(loader):
+    '''
+    Function to extract all the labels associated to an image in the DataLoader
+    The labels are extracted as Numpy arrays
+    '''
     all_labels = []
     for _, labels in loader:
-        all_labels.extend(labels.numpy())  # Estraiamo le etichette come array numpy
+        all_labels.extend(labels.numpy())
     return np.array(all_labels)
 
 
@@ -45,8 +48,12 @@ def out_dimensions(conv_layer, h_in, w_in):
 
 
 class CNNBasic(nn.Module):
+    '''
+    Simple CNN model definition
+    '''
     def __init__(self):
         super(CNNBasic, self).__init__()
+        # First Convolutional Block (Conv-Conv-Activ-Pool)
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv1, 32, 32)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
@@ -55,31 +62,40 @@ class CNNBasic(nn.Module):
         self.pool1 = nn.MaxPool2d(2, 2)
         h_out, w_out = int(h_out/2), int(w_out/2)
         
+        # Second Convolutional Block (Conv-Conv-Activ-Pool)
         self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
         self.conv4 = nn.Conv2d(in_channels=128, out_channels=64, kernel_size=(3, 3), padding=0, stride=1)
         h_out, w_out = out_dimensions(self.conv4, h_out, w_out)
         h_out, w_out = int(h_out/2), int(w_out/2)
         
+        # Store final dimensions for the forward pass
         self.dimensions_final = (64, h_out, w_out)
+
+        # Fully connected layers
         self.fc1 = nn.Linear(64 * h_out * w_out, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, 10)
 
 
     def forward(self, x):
+        # First Convolutional Block (Conv-Conv-Activ-Pool)
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.relu1(x)
         x = self.pool1(x)
         
+        # Second Convolutional Block (Conv-Conv-Activ-Pool)
         x = self.conv3(x)
         x = self.conv4(x)
         x = self.relu1(x)
         x = self.pool1(x)
         
         n_channels, h, w = self.dimensions_final
+        # Flatten
         x = x.view(-1, n_channels * h * w)
+        
+        # 3 fully connected layers
         x = self.fc1(x)
         x = self.fc2(x)
         x = self.fc3(x)
@@ -90,55 +106,60 @@ class CNNBasic(nn.Module):
 Q9
 '''
 class CNNGodzilla(nn.Module):
+    '''
+    Advanced CNN model definition
+    '''
     def __init__(self):
         super(CNNGodzilla, self).__init__()
         
-        # First block
+        # First Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv1, 32, 32)  # 32x32
+        h_out, w_out = out_dimensions(self.conv1, 32, 32)
         self.BN1 = nn.BatchNorm2d(32)
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=32, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)  # 32x32
+        h_out, w_out = out_dimensions(self.conv2, h_out, w_out)
         self.BN2 = nn.BatchNorm2d(32)
         self.pool1 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)  # 16x16
+        h_out, w_out = int(h_out/2), int(w_out/2)
         
-        # Second block
+        # Second Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         self.conv3 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)  # 16x16
+        h_out, w_out = out_dimensions(self.conv3, h_out, w_out)
         self.BN3 = nn.BatchNorm2d(64)
         self.conv4 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv4, h_out, w_out)  # 16x16
+        h_out, w_out = out_dimensions(self.conv4, h_out, w_out) 
         self.BN4 = nn.BatchNorm2d(64)
         self.pool2 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)  # 8x8
+        h_out, w_out = int(h_out/2), int(w_out/2)
         
-        # Third block
+        # Third Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         self.conv5 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv5, h_out, w_out)  # 8x8
+        h_out, w_out = out_dimensions(self.conv5, h_out, w_out)
         self.BN5 = nn.BatchNorm2d(128)
         self.conv6 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=(3, 3), padding=1, stride=1)
-        h_out, w_out = out_dimensions(self.conv6, h_out, w_out)  # 8x8
+        h_out, w_out = out_dimensions(self.conv6, h_out, w_out)
         self.BN6 = nn.BatchNorm2d(256)
         self.pool3 = nn.MaxPool2d(2, 2)
-        h_out, w_out = int(h_out/2), int(w_out/2)  # 4x4
+        h_out, w_out = int(h_out/2), int(w_out/2)
         
-        # Flatten
         # Store final dimensions for the forward pass
-        self.dimensions_final = (256, h_out, w_out)  # Should be (256, 4, 4)
+        self.dimensions_final = (256, h_out, w_out)
         
-        # Fully Connected
-        self.fc1 = nn.Linear(256 * h_out * w_out, 128)  # 256 * 4 * 4 = 4096 input features
+        # First Fully Connected Block (FC-BN-Activ-Dropout)
+        self.fc1 = nn.Linear(256 * h_out * w_out, 128)
         self.BN7 = nn.BatchNorm1d(128)
         self.Dropout1 = nn.Dropout(0.5)
 
+        # Second Fully Connected Block (FC-BN-Activ-Dropout)
         self.fc2 = nn.Linear(128, 64)
         self.BN8 = nn.BatchNorm1d(64)
         self.Dropout2 = nn.Dropout(0.5)
 
+        # Third Fully Connected Layer
         self.fc3 = nn.Linear(64, 10)
 
     def forward(self, x):
+        # First Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         x = self.conv1(x)
         x = self.BN1(x)
         x = F.gelu(x)
@@ -147,6 +168,7 @@ class CNNGodzilla(nn.Module):
         x = F.gelu(x)
         x = self.pool1(x)
 
+        # Second Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         x = self.conv3(x)
         x = self.BN3(x)
         x = F.gelu(x)
@@ -155,6 +177,7 @@ class CNNGodzilla(nn.Module):
         x = F.gelu(x)
         x = self.pool2(x)
 
+        # Third Convolutional Block (Conv-BN-Activ-Conv-BN-Activ-Pool)
         x = self.conv5(x)
         x = self.BN5(x)
         x = F.gelu(x)
@@ -164,18 +187,23 @@ class CNNGodzilla(nn.Module):
         x = self.pool3(x)
 
         n_channels, h, w = self.dimensions_final
+        
+        # Flatten 
         x = x.view(-1, n_channels * h * w)
 
+        # First Fully Connected Block (FC-BN-Activ-Dropout)
         x = self.fc1(x)
         x = self.BN7(x)
         x = F.gelu(x)
         x = self.Dropout1(x)
 
+        # Second Fully Connected Block (FC-BN-Activ-Dropout)
         x = self.fc2(x)
         x = self.BN8(x)
         x = F.gelu(x)
         x = self.Dropout2(x)
 
+        # Third Fully Connected Layer
         x = self.fc3(x)
         return x
 
@@ -307,7 +335,7 @@ if __name__ == "__main__":
     Q7
     '''
     model = CNNBasic()
-    learning_rate = 0.029
+    learning_rate = 0.03
     optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_fn = nn.CrossEntropyLoss()
 
