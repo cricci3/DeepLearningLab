@@ -229,7 +229,7 @@ if __name__ == "__main__":
     transformer = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=(0,0,0), std=(1,1,1))])
 
     # Load CIFAR-10 training and test dataset with defined transformations
-    dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=transformer)#transforms.ToTensor())
+    dataset_train= datasets.CIFAR10(root='./data', train=True, download=True, transform=transformer)
     trainloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True)
 
     dataset_test= datasets.CIFAR10(root='./data', train=False, download=True, transform=transformer)
@@ -307,12 +307,19 @@ if __name__ == "__main__":
     '''
     Q3
     '''
+    # Load CIFAR-10 training dataset without any transformation
+    pilI_dataset= datasets.CIFAR10(root='./data', train=False, download=True)
+
+    # Display the type of on element of the dataset without transformations
+    first_pilI_image, _ = pilI_dataset[0]
+    print(f"Type of each element of the dataset without transformations: {type(first_pilI_image)}")
+
     # Get a batch of images from the training loader and extract the first image
     trainiter = iter(trainloader)
     train_images, _ = next(trainiter)
     first_image = train_images[0]
 
-    # Display the type of the dataset element
+    # Display the type of the elements of transformated dataset
     print(f"Type of each element of the dataset: {first_image.type}")
 
     # Display the shape of the image tensor (channels, height, width)
