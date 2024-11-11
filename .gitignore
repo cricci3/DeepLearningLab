@@ -1,8 +1,6 @@
 MNIST/
 Assignment 2/data
-Assignment 2/02_Assignment.pdf
 Assignment 2/images
-Assignment 2/Claudio_Ricci.pdf
-Assignment 3/03_assignment.pdf
 /data
-.DS_Store
+*.DS_Store
+*.pdf
