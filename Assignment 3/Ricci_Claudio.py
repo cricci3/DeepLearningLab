@@ -22,13 +22,17 @@ if __name__ == "__main__":
     
     # Question 1
     ds = load_dataset("heegyu/news-category-dataset")
-    
     print(ds['train'])
-    
-    # TODO: what's next?
-    
+        
     # Question 2
+    ds_train = []
+    for news in ds['train']:
+        if news['category'] == 'POLITICS':
+            ds_train.append([news['headline']])
     
+    assert len(ds_train) == 35602
+
+    print(ds_train)
     
     # ....
     
