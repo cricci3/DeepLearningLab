@@ -5,18 +5,65 @@ NAME SURNAME
 import torch
 from datasets import load_dataset
 from collections import Counter
+from torch import nn
+from torch.utils.data import DataLoader
 
 
-# Set the seed
-seed = 42
-torch.manual_seed(seed)
-# Probably, this below must be changed if you work with a M1/M2/M3 Mac
-torch.cuda.manual_seed(seed) # for CUDA
-torch.backends.cudnn.deterministic = True # for CUDNN
-torch.backends.benchmark = False # if True, causes cuDNN to benchmark multiple convolution algorithms and select the fastest.
+# Question 5
+# Create a dataset class
+# - input:
+#       list of tokenized sequences
+#       word_to_int
+# - Each item: a tuple having
+#        the indexes of all the words of the sentence except the last one;
+#        all the elements of that sentence except the first one
+
+class Dataset:
+    def __init__(self, sequences, word_to_int):
+        self.sequences = sequences
+        self.word_to_int = word_to_int
+
+        # Convert each sequence (list of words) to indexes using map
+        self.indexed_sequences = [
+            [self.word_to_int[word] for word in sequence if word in self.word_to_int] 
+            for sequence in self.sequences
+        ] # the problem is that if in the sequence there is a word (ex '') without mapping, skip it
+        
+    def __getitem__(self, idx):
+        # Get the indexed sequence at the given index
+        indexed_seq = self.indexed_sequences[idx]
+            
+        # Create x (all indexes except the last one) and y (all indexes except the first one)
+        x = indexed_seq[:-1]
+        y = indexed_seq[1:]
+            
+        return torch.tensor(x), torch.tensor(y)
+            
+    def __len__(self):
+        # Return the total number of sequences
+        return len(self.indexed_sequences)
+
+
+# Question 6
+def collate_fn(batch, pad_value):
+  # Separate data (x) and target (y) pairs from the batch
+  data, targets = zip(*batch)
+
+  padded_data = nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=pad_value)
+  padded_targets = nn.utils.rnn.pad_sequence(targets, batch_first=True, padding_value=pad_value)
+
+  return padded_data, padded_targets
 
 
 if __name__ == "__main__":
+    # Set the seed
+    seed = 42
+    torch.manual_seed(seed)
+    # Probably, this below must be changed if you work with a M1/M2/M3 Mac
+    torch.cuda.manual_seed(seed) # for CUDA
+    torch.backends.cudnn.deterministic = True # for CUDNN
+    torch.backends.benchmark = False # if True, causes cuDNN to benchmark multiple convolution algorithms and select the fastest.
+
     '''
     Data
     '''
@@ -105,7 +152,23 @@ if __name__ == "__main__":
     int_to_word = {word:i for i, word in word_to_int.items()}
 
     assert int_to_word[0] == '<EOS>' and int_to_word[len(word_vocab)-1] == 'PAD'
+
+
+    # Question 6
+    batch_size = 8
+    dataset = Dataset(ds_train, word_to_int)
+
+    if batch_size == 1:
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    else:
+        dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+                            collate_fn=lambda batch: collate_fn(batch, word_to_int["PAD"]))
     
+    # By default, DataLoader expects a function like collate_fn(batch) that takes only one argument—the batch itself.
+    # However, in this case, collate_fn requires an additional argument (pad_value).
+    # The lambda function allows to rewrite collate_fn(batch, pad_value) into a version compatible with DataLoader
+
+        
     
     '''
     Model
