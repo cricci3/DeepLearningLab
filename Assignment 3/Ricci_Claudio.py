@@ -1,6 +1,6 @@
 '''
 Assignment 3
-NAME SURNAME
+CLAUDIO RICCI
 '''
 import torch
 from datasets import load_dataset
