@@ -173,7 +173,62 @@ if __name__ == "__main__":
     '''
     Model
     '''
-    
+    class LSTMModel(nn.Module):
+        def __init__(self, map, hidden_size, emb_dim=8, n_layers=1, dropout_p=0.2):
+            super(LSTMModel, self).__init__()
+
+            self.vocab_size  = len(map)
+            self.hidden_size = hidden_size
+            self.emb_dim     = emb_dim
+            self.n_layers    = n_layers
+            self.dropout_p   = dropout_p
+
+            # Embedding layer
+            self.embedding = nn.Embedding(
+                num_embeddings=self.vocab_size,
+                embedding_dim=self.emb_dim,
+                padding_idx=map["PAD"]
+            )
+
+            # LSTM layer with potential stacking
+            self.lstm = nn.LSTM(
+                input_size=self.emb_dim,
+                hidden_size=self.hidden_size,
+                num_layers=self.n_layers,
+                batch_first=True,
+                dropout=self.dropout_p if n_layers > 1 else 0  # Apply dropout only if more than 1 layer
+            )
+
+            # Dropout layer for regularization
+            self.dropout = nn.Dropout(self.dropout_p)
+
+            # Fully connected layer to project LSTM outputs to vocabulary size
+            self.fc = nn.Linear(
+                in_features=self.hidden_size,
+                out_features=self.vocab_size
+            )
+
+        def forward(self, x, prev_state):
+            # Embedding lookup for input tokens
+            embed = self.embedding(x)
+
+            # Pass embeddings through the LSTM
+            yhat, state = self.lstm(embed, prev_state)  # yhat: (batch, seq_length, hidden_size)
+
+            # Apply dropout to LSTM output
+            yhat = self.dropout(yhat)
+
+            # Pass through the fully connected layer to get logits
+            out = self.fc(yhat)  # out: (batch, seq_length, vocab_size)
+            
+            return out, state
+
+        def init_state(self, b_size=1):
+            # Initializes hidden and cell states with zeros
+            # Each state has shape (n_layers, batch_size, hidden_size)
+            return (torch.zeros(self.n_layers, b_size, self.hidden_size),
+                    torch.zeros(self.n_layers, b_size, self.hidden_size))
+
     '''
     Evaluation, part 1
     '''
