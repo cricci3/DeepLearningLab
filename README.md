@@ -1,6 +1,19 @@
 # DeepLearningLab
 
-This collection contains notebooks and assignments from the Deep Learning Course I @ USI. These materials reflect my learning journey and practical implementations during the course.
+This collection contains notebooks and assignments from the Deep Learning Lab Course I attended @ USI. These materials reflect my learning journey and practical implementations during the course.
+
+## 📑 Arguments
+
+This repository covers the following key concepts and techniques in deep learning:
+
+- Linear Regression
+- Polynomial Regression
+- Feedforward Neural Networks (FFNN)
+- Convolutional Neural Networks (CNN)
+- Recurrent Neural Networks (RNN)
+- Long Short-Term Memory (LSTM)
+- Transformers
+- Time Series Analysis
 
 ## 📝 License
 
