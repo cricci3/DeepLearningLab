@@ -429,10 +429,17 @@ if __name__ == "__main__":
     '''
     Data
     '''
-    
     # Question 1
     ds = load_dataset("heegyu/news-category-dataset")
+
+    # View the type of the dataset
+    print(type(ds))
+
+    # View what's inside the train dataset
     print(ds['train'])
+
+    # Print the first row of the dataset
+    print(ds['train'][0])
         
 
     # Question 2
