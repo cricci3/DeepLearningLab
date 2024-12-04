@@ -591,7 +591,8 @@ if __name__ == "__main__":
     batch_size = 32
     # Create a Dataset object from the dataset and word_to_int dict
     dataset = Dataset(ds_train, word_to_int)
-
+    
+    # Question 6
     # Create the Dataloader
     if batch_size == 1:
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -677,7 +678,7 @@ if __name__ == "__main__":
     # Start the training and takes the time
     start_time = time.time()
     model_tbtt, loss_hist_tbtt, perplexity_hist_tbtt = tbtt_train(model_tbtt, dataloader, epochs, criterion, seed, truncation_len, lr=0.001, print_every=2, clip=1)
-    end_time = start_time - time.time()
+    end_time = time.time() - start_time
     print(end_time)
 
     # TBTT training loss plot
@@ -712,58 +713,3 @@ if __name__ == "__main__":
         generated = sample(model, seed, word_to_int["<EOS>"], "argmax")
         generated = " ".join(keys_to_values(generated, int_to_word))
         print("Generated: ", generated)
-    
-    '''
-    Bonus question
-    '''
-    def find_closest_word(vec, model, int_to_word):
-        # Ensure vector is on the same device as the model
-        device = model.embedding.weight.device
-        vec = vec.to(device)
-
-        distances = []
-        for idx in range(len(int_to_word)):
-            emb_vec = model.embedding(torch.tensor([idx], device=device)).detach().squeeze(0)
-            distance = F.pairwise_distance(vec.unsqueeze(0), emb_vec.unsqueeze(0)).item()
-            distances.append((distance, int_to_word[idx]))
-
-        distances.sort()
-        return distances[0][1]  # Return the closest word
-
-
-def test_analogy(model, word_to_int, int_to_word, word1, word2, word3):
-    """
-    Tests word analogies using the embedding layer.
-
-    Args:
-        model: The trained LSTM model.
-        word_to_int: A dictionary mapping words to their indices.
-        int_to_word: A dictionary mapping indices to words.
-        word1: First word (e.g., "King").
-        word2: Second word to subtract (e.g., "Man").
-        word3: Third word to add (e.g., "Woman").
-
-    Returns:
-        The word closest to the resulting vector.
-    """
-    # Get the device of the embedding layer
-    device = model.embedding.weight.device
-
-    # Get embeddings for the words and move them to the correct device
-    with torch.no_grad():
-        vec1 = model.embedding(torch.tensor([word_to_int[word1]], device=device)).squeeze(0)
-        vec2 = model.embedding(torch.tensor([word_to_int[word2]], device=device)).squeeze(0)
-        vec3 = model.embedding(torch.tensor([word_to_int[word3]], device=device)).squeeze(0)
-
-        # Perform vector arithmetic: vector1 - vector2 + vector3
-        result_vec = vec1 - vec2 + vec3
-
-        # Find the closest word in the embedding space
-        closest_word = find_closest_word(result_vec, model, int_to_word)
-
-    return closest_word
-
-
-# Example usage:
-closest_word = test_analogy(model, word_to_int, int_to_word, "king", "man", "woman")
-print(f"Closest word to (King - Man + Woman): {closest_word}")
