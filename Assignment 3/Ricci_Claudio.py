@@ -655,12 +655,16 @@ if __name__ == "__main__":
     # Training loss plot
     plt.axhline(y = 1.5, color = 'r', linestyle = '--')
     plt.plot(loss_hist)
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss Value')
     plt.title('Loss Evolution')
     plt.legend(["1.5 target Loss", "Train Loss"])
     plt.show()
 
     # Evolution of perplexity plot
     plt.plot(perplexity_hist)
+    plt.xlabel('Epochs')
+    plt.ylabel('Perplexity Value')
     plt.title('Perplexity Evolution')
     plt.show()
 
@@ -685,12 +689,16 @@ if __name__ == "__main__":
     plt.axhline(y = 1.5, color = 'r', linestyle = '--')
     plt.plot(loss_hist_tbtt)
     plt.title('TBTT Loss evolution')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss Value')
     plt.legend(["1.5 target loss", "Train Loss"])
     plt.show()
 
     # TBTT perplexity plot
     plt.plot(perplexity_hist_tbtt)
     plt.title('TBTT perplexity evolution')
+    plt.xlabel('Epochs')
+    plt.ylabel('Perplexity Value')
     plt.show()
 
 
