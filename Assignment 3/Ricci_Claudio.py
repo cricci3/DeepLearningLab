@@ -721,3 +721,47 @@ if __name__ == "__main__":
         generated = sample(model, seed, word_to_int["<EOS>"], "argmax")
         generated = " ".join(keys_to_values(generated, int_to_word))
         print("Generated: ", generated)
+
+    
+    '''
+    Bonus
+    '''
+    # Finds the word whose embedding is closest to a given vector.
+    def find_closest_word(vec, model, int_to_word):        
+        device = model.embedding.weight.device
+        vec = vec.to(device)
+
+        distances = []
+        for idx in range(len(int_to_word)):
+            # Retrieve the embedding vector for the current word index
+            emb_vec = model.embedding(torch.tensor([idx], device=device)).detach().squeeze(0)
+            
+            # Compute the pairwise distance between the input vector and the embedding vector
+            distance = F.pairwise_distance(vec.unsqueeze(0), emb_vec.unsqueeze(0)).item()
+            distances.append((distance, int_to_word[idx]))
+
+        distances.sort()
+        return distances[0][1]  # Return the closest word
+
+
+# Tests word analogies using the embedding layer.
+def test_analogy(model, word_to_int, int_to_word, word1, word2, word3):
+    # Get the device of the embedding layer
+    device = model.embedding.weight.device
+
+    # Get embeddings for the words
+    with torch.no_grad():
+        vec1 = model.embedding(torch.tensor([word_to_int[word1]], device=device)).squeeze(0)
+        vec2 = model.embedding(torch.tensor([word_to_int[word2]], device=device)).squeeze(0)
+        vec3 = model.embedding(torch.tensor([word_to_int[word3]], device=device)).squeeze(0)
+
+        # Perform vector arithmetic: vector1 - vector2 + vector3
+        result_vec = vec1 - vec2 + vec3
+
+        # Find the closest word in the embedding space
+        closest_word = find_closest_word(result_vec, model, int_to_word)
+
+    return closest_word
+
+closest_word = test_analogy(model, word_to_int, int_to_word, "king", "man", "woman")
+print(f"Closest word to (King - Man + Woman): {closest_word}")
