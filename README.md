@@ -21,9 +21,4 @@ This repository is licensed under the MIT License.
 
 ## 🤝 Acknowledgments
 
-Università della Svizzera italiana (USI) for offering this enriching course.
-Course instructors and teaching assistants for their guidance.
-Fellow mates for their collaborative spirit.
-
-
-Feel free to fork, star ⭐, or contribute to this repository!
+Università della Svizzera italiana (USI)
