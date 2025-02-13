@@ -1,7 +1,7 @@
 MNIST/
-Assignment 2/data
-Assignment 2/images
-Assignment 4/data
+2 - CNN/data
+2 - CNN/images
+4 - Transformer/data
 /data
 *.DS_Store
 *.pdf
